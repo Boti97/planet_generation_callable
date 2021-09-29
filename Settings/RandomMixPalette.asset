@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ee498d34c27adf24aa4647ca40ebd092, type: 3}
   m_Name: RandomMixPalette
   m_EditorClassIdentifier: 
-  color1: {r: 0.6509434, g: 0.04605731, b: 0.11370215, a: 1}
+  color1: {r: 0.31132078, g: 0.08664116, b: 0.11144348, a: 1}
   color2: {r: 0.12209351, g: 0.509434, b: 0.10813459, a: 1}
   color3: {r: 0.12981048, g: 0.12335351, b: 0.7924528, a: 1}
   greyControl: 0.25

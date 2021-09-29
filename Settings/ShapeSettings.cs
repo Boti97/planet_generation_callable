@@ -2,8 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-[CreateAssetMenu()]
-public class ShapeSettings : ScriptableObject
+public class ShapeSettings
 {
     [Range(5, 10)]
     public float radius;

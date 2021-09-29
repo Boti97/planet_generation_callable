@@ -15,7 +15,7 @@ public class TerrainFace
 
     public TerrainFace(Mesh mesh, Vector3 localUp, int resolution, ShapeGenerator shapeGenerator)
     {
-       
+
         this.axisA = new Vector3(localUp.y, localUp.z, localUp.x);
         this.axisB = Vector3.Cross(localUp, axisA);
         this.localUp = localUp;
@@ -25,7 +25,7 @@ public class TerrainFace
     }
 
 
-    public void ConstructMesh()
+    public Mesh ConstructMesh()
     {
         Vector3[] vertices = new Vector3[resolution * resolution];
         int[] triangles = new int[(resolution - 1) * (resolution - 1) * 6];
@@ -40,8 +40,6 @@ public class TerrainFace
                 Vector3 point = localUp + (percent.x - .5f) * 2 * axisA + (percent.y - .5f) * 2 * axisB;
                 point = point.normalized;
                 point = shapeGenerator.GenerateShape(point);
-                //point += ((point-Vector3.zero).normalized * (shape.Radius * NoiseGenerator.GenerateSecondLayerNoise(point.x, point.y, noise)));
-
                 vertices[i] = point;
 
                 if (x != resolution - 1 && y != resolution - 1)
@@ -61,5 +59,7 @@ public class TerrainFace
         mesh.vertices = vertices;
         mesh.triangles = triangles;
         mesh.RecalculateNormals();
+
+        return mesh;
     }
 }

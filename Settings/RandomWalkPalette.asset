@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 17bb921513acf9d478f3dfd7a4301000, type: 3}
   m_Name: RandomWalkPalette
   m_EditorClassIdentifier: 
-  baseColor: {r: 0.035294104, g: 0.34509805, b: 0.06730619, a: 1}
+  baseColor: {r: 0.3819361, g: 0.45320112, b: 0.22699638, a: 1}
   min: 0.2
-  max: 0.4
+  max: 0.2
