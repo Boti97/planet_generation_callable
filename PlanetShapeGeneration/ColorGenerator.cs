@@ -4,33 +4,28 @@ using UnityEngine;
 
 public class ColorGenerator
 {
-    private PlanetSurfaceColor colorSettings;
     private Texture2D texture;
     const int textureResolution = 50;
 
-    public void UpdateSettings(PlanetSurfaceColor color)
+    public void UpdateSettings()
     {
-        this.colorSettings = color;
-        if (texture == null)
-        {
-            texture = new Texture2D(textureResolution, 1);
-        }
+        texture = new Texture2D(textureResolution, 1);
     }
 
-    public void UpdateElevation(MinMax elevationMinMax)
+    public void UpdateElevation(Material material, MinMax elevationMinMax)
     {
-        colorSettings.planetMaterial.SetVector("_elevation", new Vector4(elevationMinMax.Min, elevationMinMax.Max));
+        material.SetVector("_elevation", new Vector4(elevationMinMax.Min, elevationMinMax.Max));
     }
 
-    public void UpdateColors()
+    public void UpdateColors(Material material, Gradient gradient)
     {
         Color[] colors = new Color[textureResolution];
         for (int i = 0; i < textureResolution; i++)
         {
-            colors[i] = colorSettings.gradient.Evaluate(i / (textureResolution - 1f));
+            colors[i] = gradient.Evaluate(i / (textureResolution - 1f));
         }
         texture.SetPixels(colors);
         texture.Apply();
-        colorSettings.planetMaterial.SetTexture("_texture", texture);
+        material.SetTexture("_texture", texture);
     }
 }

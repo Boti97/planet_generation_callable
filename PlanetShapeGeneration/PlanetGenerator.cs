@@ -9,36 +9,39 @@ using static ShapeSettings;
 
 public class PlanetGenerator : MonoBehaviour
 {
-    public int numberOfPlanets;
+    public int numberOfRows;
     public int baseSeed;
-    public Material planetMaterial;
+    public Shader planetShader;
     public List<Color> colorPalette;
 
     private ShapeSettings shapeSettings;
-    private PlanetSurfaceColor colorSettings;
 
     [Range(2, 256)]
-    private int resolution = 250;
+    private int resolution = 100;
     private int planetSeed;
 
     private List<GameObject> planets = new List<GameObject>();
+
     private MeshFilter[] meshFilters;
     private TerrainFace[] terrainFaces;
     private ShapeGenerator shapeGenerator = new ShapeGenerator();
     private ColorGenerator colorGenerator = new ColorGenerator();
+
+    private Gradient currentGradient;
+
     private Vector3[] directions = { Vector3.up, Vector3.down, Vector3.left, Vector3.right, Vector3.forward, Vector3.back };
     private String[] directionStrings = { "Up", "Down", "Left", "Right", "Forward", "Back" };
 
     public void Start()
     {
-        List<Color> colorPalette = new ColorPaletteGenerator().GenerateColorPalette(6);
-        planets = GeneratePlanets(numberOfPlanets, baseSeed, colorPalette);
+        List<Color> colorPalette = new ColorPaletteGenerator().GenerateColorPalette(20);
+        planets = GeneratePlanets(numberOfRows * numberOfRows * numberOfRows, baseSeed, colorPalette);
         int planetIndex = 0;
-        for (int x = 0; x < numberOfPlanets / 4; x++)
+        for (int x = 0; x < numberOfRows; x++)
         {
-            for (int y = 0; y < numberOfPlanets / 4; y++)
+            for (int y = 0; y < numberOfRows; y++)
             {
-                for (int z = 0; z < numberOfPlanets / 4; z++)
+                for (int z = 0; z < numberOfRows; z++)
                 {
                     Debug.LogWarning("x:" + x + ", y:" + y + ", z:" + z + ", index:" + planetIndex);
                     planets[planetIndex].transform.position = new Vector3(x * 50, y * 50, z * 50);
@@ -56,7 +59,8 @@ public class PlanetGenerator : MonoBehaviour
         for (int i = 0; i < numberOfPlanets; i++)
         {
             planetSeed = Random.Range(0, 10000);
-            Debug.Log("Planet Seed: " + planetSeed);
+            Debug.Log("Logging for planet number: " + i);
+            Debug.Log("Planet Seed for planet number " + i + " is " + planetSeed);
             Random.InitState(planetSeed);
             RandomizeSurfaceInput();
             planets.Add(GeneratePlanet(i));
@@ -73,10 +77,13 @@ public class PlanetGenerator : MonoBehaviour
         GradientColorKey[] colorKey = new GradientColorKey[6];
         GradientAlphaKey[] alphaKey = new GradientAlphaKey[6];
 
+        Debug.Log("Seed: " + Random.seed);
         for (int i = 0; i < colorKey.Length; i++)
         {
             //get a random, NOT USED color from color palette
-            colorKey[i].color = colorPalette[Random.Range(0, i)];
+            int numberOfColorInPalette = Random.Range(0, colorPalette.Count);
+            Debug.Log("Number of color in palette: " + numberOfColorInPalette);
+            colorKey[i].color = colorPalette[numberOfColorInPalette];
         }
 
         colorKey[0].time = 0.0f;
@@ -112,9 +119,7 @@ public class PlanetGenerator : MonoBehaviour
 
     private void RandomizeSurfaceInput()
     {
-        colorSettings = new PlanetSurfaceColor();
-        colorSettings.planetMaterial = planetMaterial;
-        colorSettings.gradient = SetColorGradient();
+        currentGradient = SetColorGradient();
 
         shapeSettings = new ShapeSettings();
         shapeSettings.radius = Random.Range(5, 10);
@@ -187,18 +192,34 @@ public class PlanetGenerator : MonoBehaviour
     public GameObject GeneratePlanet(int number)
     {
         GameObject planet = new GameObject("Planet" + number);
-        Initialize(planet, number);
-        GenerateMesh();
-        GenerateTexture();
+        Material planetMaterial = new Material(planetShader);
+
+        GradientDebug gradientDebug = planet.AddComponent<GradientDebug>();
+        gradientDebug.gradient = currentGradient;
+
+        Initialize(planet, number, planetMaterial);
+        planet.AddComponent<MeshFilter>().mesh.CombineMeshes(GenerateMeshes());
+        planet.AddComponent<MeshRenderer>().material = planetMaterial;
+
+        colorGenerator.UpdateElevation(planetMaterial, shapeGenerator.ElevationMinMax);
+        colorGenerator.UpdateColors(planetMaterial, currentGradient);
+
+        int childs = planet.transform.childCount;
+        for (var i = childs - 1; i >= 0; i--)
+        {
+            Destroy(planet.transform.GetChild(i).gameObject);
+        }
+
         return planet;
     }
 
-    private void Initialize(GameObject planet, int number)
+    private void Initialize(GameObject planet, int number, Material material)
     {
         shapeGenerator.UpdateSettings(shapeSettings);
-        colorGenerator.UpdateSettings(colorSettings);
+        colorGenerator.UpdateSettings();
         meshFilters = new MeshFilter[6];
         terrainFaces = new TerrainFace[6];
+
 
         for (int i = 0; i < 6; i++)
         {
@@ -211,22 +232,19 @@ public class PlanetGenerator : MonoBehaviour
                 meshFilters[i] = meshObj.AddComponent<MeshFilter>();
                 meshFilters[i].sharedMesh = new Mesh();
             }
-            meshFilters[i].GetComponent<MeshRenderer>().material = colorSettings.planetMaterial;
+            meshFilters[i].GetComponent<MeshRenderer>().material = material;
             terrainFaces[i] = new TerrainFace(meshFilters[i].sharedMesh, directions[i], resolution, shapeGenerator);
         }
     }
 
-    private void GenerateMesh()
+    private CombineInstance[] GenerateMeshes()
     {
-        foreach (TerrainFace face in terrainFaces)
+        CombineInstance[] combineInstances = new CombineInstance[6];
+        for (int i = 0; i < terrainFaces.Length; i++)
         {
-            face.ConstructMesh();
+            combineInstances[i].mesh = terrainFaces[i].ConstructMesh();
+            combineInstances[i].transform = meshFilters[i].transform.localToWorldMatrix;
         }
-        colorGenerator.UpdateElevation(shapeGenerator.ElevationMinMax);
-    }
-
-    private void GenerateTexture()
-    {
-        colorGenerator.UpdateColors();
+        return combineInstances;
     }
 }

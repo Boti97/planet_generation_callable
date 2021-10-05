@@ -2,8 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PlanetSurfaceColor
+public class GradientDebug : MonoBehaviour
 {
     public Gradient gradient;
-    public Material planetMaterial;
 }
