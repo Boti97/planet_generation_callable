@@ -13,6 +13,7 @@ public class PlanetGenerator : MonoBehaviour
     public int baseSeed;
     public Shader planetShader;
     public List<Color> colorPalette;
+    public List<int> planetSeeds = new List<int>();
 
     private ShapeSettings shapeSettings;
 
@@ -34,8 +35,9 @@ public class PlanetGenerator : MonoBehaviour
 
     public void Start()
     {
-        List<Color> colorPalette = new ColorPaletteGenerator().GenerateColorPalette(20);
-        planets = GeneratePlanets(numberOfRows * numberOfRows * numberOfRows, baseSeed, colorPalette);
+        Random.InitState(baseSeed);
+        List<Color> colorPaletteToGenerate = new ColorPaletteGenerator().GenerateColorPalette(colorPalette.Count);
+        planets = GeneratePlanets(numberOfRows * numberOfRows * numberOfRows, baseSeed, colorPaletteToGenerate);
         int planetIndex = 0;
         for (int x = 0; x < numberOfRows; x++)
         {
@@ -43,7 +45,6 @@ public class PlanetGenerator : MonoBehaviour
             {
                 for (int z = 0; z < numberOfRows; z++)
                 {
-                    Debug.LogWarning("x:" + x + ", y:" + y + ", z:" + z + ", index:" + planetIndex);
                     planets[planetIndex].transform.position = new Vector3(x * 50, y * 50, z * 50);
                     planetIndex++;
                 }
@@ -54,71 +55,27 @@ public class PlanetGenerator : MonoBehaviour
     private List<GameObject> GeneratePlanets(int numberOfPlanets, int baseSeed, List<Color> colorPalette)
     {
         this.colorPalette = colorPalette;
-        //from now on everything is dependent on the given base seed
+        //set base seed
         Random.InitState(baseSeed);
         for (int i = 0; i < numberOfPlanets; i++)
         {
             planetSeed = Random.Range(0, 10000);
-            Debug.Log("Logging for planet number: " + i);
-            Debug.Log("Planet Seed for planet number " + i + " is " + planetSeed);
+            planetSeeds.Add(planetSeed);
+            //generate planet seed with base seed, to get different planets
             Random.InitState(planetSeed);
-            RandomizeSurfaceInput();
+            GenerateInput();
             planets.Add(GeneratePlanet(i));
         }
+        //set base seed back
         Random.InitState(baseSeed);
         return planets;
     }
 
-    // ----------------------------- COLOR GENERATOR METHODS -------------------------------------------
+    // ----------------------------- INITIALIZATORS ----------------------------------
 
-    private Gradient SetColorGradient()
+    private void GenerateInput()
     {
-        Gradient gradient = new Gradient();
-        GradientColorKey[] colorKey = new GradientColorKey[6];
-        GradientAlphaKey[] alphaKey = new GradientAlphaKey[6];
-
-        Debug.Log("Seed: " + Random.seed);
-        for (int i = 0; i < colorKey.Length; i++)
-        {
-            //get a random, NOT USED color from color palette
-            int numberOfColorInPalette = Random.Range(0, colorPalette.Count);
-            Debug.Log("Number of color in palette: " + numberOfColorInPalette);
-            colorKey[i].color = colorPalette[numberOfColorInPalette];
-        }
-
-        colorKey[0].time = 0.0f;
-        alphaKey[0].time = 0.0f;
-        alphaKey[0].alpha = 1.0f;
-
-        colorKey[1].time = 0.018f;
-        alphaKey[1].time = 0.018f;
-        alphaKey[1].alpha = 1.0f;
-
-        colorKey[2].time = 0.079f;
-        alphaKey[2].time = 0.079f;
-        alphaKey[2].alpha = 1.0f;
-
-        colorKey[3].time = 0.438f;
-        alphaKey[3].time = 0.438f;
-        alphaKey[3].alpha = 1.0f;
-
-        colorKey[4].time = 0.8f;
-        alphaKey[4].time = 0.8f;
-        alphaKey[4].alpha = 1.0f;
-
-        colorKey[5].time = 1.0f;
-        alphaKey[5].time = 1.0f;
-        alphaKey[5].alpha = 1.0f;
-
-        gradient.SetKeys(colorKey, alphaKey);
-
-        return gradient;
-    }
-
-    // ----------------------------- PLANET SURFACE RANDOMIZATION METHODS ----------------------------------
-
-    private void RandomizeSurfaceInput()
-    {
+        Debug.Log(Random.seed);
         currentGradient = SetColorGradient();
 
         shapeSettings = new ShapeSettings();
@@ -188,14 +145,52 @@ public class PlanetGenerator : MonoBehaviour
         }
     }
 
+    private Gradient SetColorGradient()
+    {
+        Gradient gradient = new Gradient();
+        GradientColorKey[] colorKey = new GradientColorKey[6];
+        GradientAlphaKey[] alphaKey = new GradientAlphaKey[6];
+        for (int i = 0; i < colorKey.Length; i++)
+        {
+            //get a random, NOT USED color from color palette
+            int numberOfColorInPalette = Random.Range(0, colorPalette.Count);
+            colorKey[i].color = colorPalette[numberOfColorInPalette];
+        }
+
+        colorKey[0].time = 0.0f;
+        alphaKey[0].time = 0.0f;
+        alphaKey[0].alpha = 1.0f;
+
+        colorKey[1].time = 0.018f;
+        alphaKey[1].time = 0.018f;
+        alphaKey[1].alpha = 1.0f;
+
+        colorKey[2].time = 0.079f;
+        alphaKey[2].time = 0.079f;
+        alphaKey[2].alpha = 1.0f;
+
+        colorKey[3].time = 0.438f;
+        alphaKey[3].time = 0.438f;
+        alphaKey[3].alpha = 1.0f;
+
+        colorKey[4].time = 0.8f;
+        alphaKey[4].time = 0.8f;
+        alphaKey[4].alpha = 1.0f;
+
+        colorKey[5].time = 1.0f;
+        alphaKey[5].time = 1.0f;
+        alphaKey[5].alpha = 1.0f;
+
+        gradient.SetKeys(colorKey, alphaKey);
+
+        return gradient;
+    }
+
     // ----------------------------- PLANET GENERATION METHODS ---------------------------------------------
     public GameObject GeneratePlanet(int number)
     {
         GameObject planet = new GameObject("Planet" + number);
         Material planetMaterial = new Material(planetShader);
-
-        GradientDebug gradientDebug = planet.AddComponent<GradientDebug>();
-        gradientDebug.gradient = currentGradient;
 
         Initialize(planet, number, planetMaterial);
         planet.AddComponent<MeshFilter>().mesh.CombineMeshes(GenerateMeshes());
@@ -219,7 +214,6 @@ public class PlanetGenerator : MonoBehaviour
         colorGenerator.UpdateSettings();
         meshFilters = new MeshFilter[6];
         terrainFaces = new TerrainFace[6];
-
 
         for (int i = 0; i < 6; i++)
         {

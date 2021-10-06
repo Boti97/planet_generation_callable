@@ -9,42 +9,23 @@ public class ColorPaletteGenerator
     public List<Color> GenerateColorPalette(int sizeOfColorPalette)
     {
         List<Color> colorPalette = new List<Color>();
+        Debug.Log(Random.seed);
         for (int i = 0; i < sizeOfColorPalette; i++)
         {
-            colorPalette.Add(GenerateColorWithRandomWalk());
+            colorPalette.Add(GenerateRandomButLimitedColor());
         }
         return colorPalette;
     }
 
-    // ----------------------------- COLOR GENERATOR ALGORITHMS -------------------------------------------
-    private Color GenerateRandomColor()
+    private Color GenerateRandomButLimitedColor()
     {
-        float minHue = Random.Range(0, 1);
-        float maxHue = Random.Range(minHue, 1);
-        float minSaturation = Random.Range(0, 1);
-        float maxSaturation = Random.Range(minSaturation, 1);
-        float minValue = Random.Range(0, 1);
-        float maxValue = Random.Range(minValue, 1);
+        float minHue = Random.Range(0f, 1f);
+        float maxHue = Random.Range(minHue, 1f);
+        float minSaturation = Random.Range(0.3f, 0.7f);
+        float maxSaturation = Random.Range(minSaturation, 0.7f);
+        float minValue = Random.Range(0.3f, 0.5f);
+        float maxValue = Random.Range(minValue, 0.5f);
 
         return Random.ColorHSV(minHue, maxHue, minSaturation, maxSaturation, minValue, maxValue);
-    }
-
-    private Color GenerateColorWithRandomWalk()
-    {
-        Color newColor = Random.ColorHSV();
-
-        float min = Random.Range(0f, 1f);
-        float max = Random.Range(min, 1f);
-
-        float range = max - min;
-
-        int rSign = Random.Range(0, 2) % 2 == 0 ? 1 : -1;
-        int gSign = Random.Range(0, 2) % 2 == 0 ? 1 : -1;
-        int bSign = Random.Range(0, 2) % 2 == 0 ? 1 : -1;
-        return new Color(
-            newColor.r + rSign * (min + Random.value * range),
-            newColor.g + gSign * (min + Random.value * range),
-            newColor.b + bSign * (min + Random.value * range),
-            255);
     }
 }
